@@ -38,6 +38,8 @@ struct OpRegistrationData {
  public:
   OpRegistrationData() {}
   OpRegistrationData(const OpDef& def) : op_def(def) {}
+  OpRegistrationData(const OpDef& def, const OpShapeInferenceFn& fn)
+      : op_def(def), shape_inference_fn(fn) {}
 
   OpDef op_def;
   OpShapeInferenceFn shape_inference_fn;
@@ -127,6 +129,11 @@ class OpDefBuilder {
   OpDefBuilder& Doc(StringPiece text) { return *this; }
 #endif
 
+  // Sets the shape function to be used for shape inference.
+  //
+  // Note that currently (October 2016), python code still requires a
+  // RegisterShape call to invoke this; see call_cpp_shape_fn in
+  // python/framework/common_shapes.py
   OpDefBuilder& SetShapeFn(Status (*fn)(shape_inference::InferenceContext*));
 
   // Sets op_reg_data->op_def to the requested OpDef and

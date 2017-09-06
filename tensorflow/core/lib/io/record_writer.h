@@ -53,6 +53,10 @@ class RecordWriter {
   RecordWriter(WritableFile* dest,
                const RecordWriterOptions& options = RecordWriterOptions());
 
+  // Calls Close() and logs if an error occurs.
+  //
+  // TODO(jhseu): Require that callers explicitly call Close() and remove the
+  // implicit Close() call in the destructor.
   ~RecordWriter();
 
   Status WriteRecord(StringPiece slice);
@@ -60,22 +64,17 @@ class RecordWriter {
   // Flushes any buffered data held by underlying containers of the
   // RecordWriter to the WritableFile. Does *not* flush the
   // WritableFile.
-  Status Flush() {
-#if !defined(IS_SLIM_BUILD)
-    if (zlib_output_buffer_) {
-      return zlib_output_buffer_->Flush();
-    }
-#endif  // IS_SLIM_BUILD
+  Status Flush();
 
-    return Status::OK();
-  }
+  // Writes all output to the file. Does *not* close the WritableFile.
+  //
+  // After calling Close(), any further calls to `WriteRecord()` or `Flush()`
+  // are invalid.
+  Status Close();
 
  private:
-  WritableFile* const dest_;
+  WritableFile* dest_;
   RecordWriterOptions options_;
-#if !defined(IS_SLIM_BUILD)
-  std::unique_ptr<ZlibOutputBuffer> zlib_output_buffer_;
-#endif  // IS_SLIM_BUILD
 
   TF_DISALLOW_COPY_AND_ASSIGN(RecordWriter);
 };
